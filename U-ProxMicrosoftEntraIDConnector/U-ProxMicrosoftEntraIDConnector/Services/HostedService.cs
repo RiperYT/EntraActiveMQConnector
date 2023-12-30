@@ -12,7 +12,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
     {
         private const double _updateDeltaMinutes = 15;
 
-        private readonly IEntraService _entraservice;
+        private readonly IEntraService _entraService;
         private readonly IBrockerService _brockerService;
         private readonly IUserRepository _userRepository;
         private readonly ISettingsRepository _settingsRepository;
@@ -30,68 +30,88 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             _settingsRepository = new SettingsRepository(dataContext);
             _userRepository = new UserRepository(dataContext);
             _brockerService = new ArtemisService();
-            _entraservice = new EntraService();
-            //new Thread(() => StartAsync()).Start();
+            _entraService = new EntraService();
+
+            try
+            {
+                var settings = _settingsRepository.Get();
+                if (settings != null)
+                {
+                    _brockerService.Connect(settings.DomenBrocker, settings.PortBroker, settings.UsernameBroker, settings.PasswordBroker);
+                    _entraService.Connect(settings.TenatIdEntra, settings.ClientIdEntra);
+                }
+            }
+            catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
+
             _ = StartAsync();
         }
         public async Task StartAsync()
         {
             while (true)
             {
-                if (_entraservice.CheckConnection())
+                if (_entraService.CheckConnection())
                     break;
                 else
                     Thread.Sleep(5000);
             }
             while (true)
             {
-                var users = await _entraservice.GetAllUsers();
-                var oldUsers = _userRepository.GetAll();
-
-                //var newUsers = users.Where(user => oldUsers.First(userOld => userOld.Id.Equals(user.Id)) == null).ToList();
-                //_userRepository.AddRange(newUsers);
-
-                var newUsers = new List<UserEntity>();
-                var updateUsers = new List<UserEntity>();
-
-                //users = users.Where(user => oldUsers.First(userOld => userOld.Id.Equals(user.Id)) != null).ToList();
-                foreach (var user in users )
+                try
                 {
-                    var oldUser = oldUsers.First(t => t.Id.Equals(user.Id));
-                    if (oldUser != null)
-                    {
-                        var p = false;
-                        if (!oldUser.Name.Equals(user.Name))
-                            p = true;
-                        if (!oldUser.Surname.Equals(user.Surname))
-                            p = true;
-                        if (!oldUser.JobTitle.Equals(user.JobTitle))
-                            p = true;
-                        if (!oldUser.Mail.Equals(user.Mail))
-                            p = true;
-                        if (!oldUser.MobilePhone.Equals(user.MobilePhone))
-                            p = true;
+                    var users = await _entraService.GetAllUsers();
+                    var oldUsers = _userRepository.GetAll();
 
-                        if (p == true)
+                    //var newUsers = users.Where(user => oldUsers.First(userOld => userOld.Id.Equals(user.Id)) == null).ToList();
+                    //_userRepository.AddRange(newUsers);
+
+                    var newUsers = new List<UserEntity>();
+                    var updateUsers = new List<UserEntity>();
+
+                    //users = users.Where(user => oldUsers.First(userOld => userOld.Id.Equals(user.Id)) != null).ToList();
+                    foreach (var user in users)
+                    {
+                        var oldUser = oldUsers.First(t => t.Id.Equals(user.Id));
+                        if (oldUser != null)
                         {
-                            updateUsers.Add(user);
+                            var p = false;
+                            if (!oldUser.Name.Equals(user.Name))
+                                p = true;
+                            if (!oldUser.Surname.Equals(user.Surname))
+                                p = true;
+                            if (!oldUser.JobTitle.Equals(user.JobTitle))
+                                p = true;
+                            if (!oldUser.Mail.Equals(user.Mail))
+                                p = true;
+                            if (!oldUser.MobilePhone.Equals(user.MobilePhone))
+                                p = true;
+
+                            if (p == true)
+                            {
+                                updateUsers.Add(user);
+                            }
+                        }
+                        else
+                        {
+                            newUsers.Add(user);
                         }
                     }
-                    else
+                    _userRepository.AddRange(newUsers);
+                    _userRepository.UpdateRange(updateUsers);
+                    _lastRead = DateTime.Now;
+
+                    if (_brockerService.CheckConnection())
                     {
-                        newUsers.Add(user);
+                        var usersSend = _userRepository.GetAll().Select(t => t.UpdateTime > _lastSend);
+                        _brockerService.Send(JsonSerializer.Serialize(usersSend), "q");
+                        _lastSend = DateTime.Now;
                     }
                 }
-                _userRepository.AddRange(newUsers);
-                _userRepository.UpdateRange(updateUsers);
-                _lastRead = DateTime.Now;
-
-                if (_brockerService.CheckConnection())
-                {
-                    var usersSend = _userRepository.GetAll().Select(t => t.UpdateTime > _lastSend);
-                    _brockerService.Send(JsonSerializer.Serialize(usersSend), "q");
-                    _lastSend = DateTime.Now;
+                catch (Exception ex) {
+                    Console.WriteLine(ex.Message);
                 }
+
                 Thread.Sleep(_lastRead.AddMinutes(_updateDeltaMinutes).Microsecond - DateTime.Now.Microsecond);
             }
         }
