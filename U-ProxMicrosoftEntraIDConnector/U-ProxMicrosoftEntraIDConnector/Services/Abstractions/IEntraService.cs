@@ -6,9 +6,9 @@ namespace U_ProxMicrosoftEntraIDConnector.Services.Abstractions
 {
     public interface IEntraService
     {
-        public void Connect(string tenantId, string clientId);
+        public string Connect(string tenantId, string clientId);
 
-        public bool CheckConnection();
+        public Task<bool> CheckConnection();
 
         public Task<List<UserEntity>> GetAllUsers();
 

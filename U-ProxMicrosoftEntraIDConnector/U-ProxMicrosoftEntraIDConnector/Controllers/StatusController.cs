@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using U_ProxMicrosoftEntraIDConnector.Data.Abstractions;
+using U_ProxMicrosoftEntraIDConnector.Services.Abstractions;
 
 namespace U_ProxMicrosoftEntraIDConnector.Controllers
 {
@@ -6,16 +8,25 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
     [ApiController]
     public class StatusController : ControllerBase
     {
-        [HttpGet("getStatus")]
-        public string Status(string secureToken)
+        private readonly IEntraService _entraService;
+        private readonly IBrockerService _brockerService;
+        public StatusController(IEntraService entraService, IBrockerService brockerService)
         {
-            return "Hello";
+            _entraService = entraService;
+            _brockerService = brockerService;
         }
 
-        [HttpGet("update")]
+        [HttpGet("getStatus")]
+        public async Task<string> Status(string secureToken)
+        {
+            var entra = await _entraService.CheckConnection() == true ? "connected" : "not connected";
+            return $"Entra id: {entra}";
+        }
+
+        /*[HttpGet("update")]
         public string Update(string secureToken)
         {
             return "Hello";
-        }
+        }*/
     }
 }

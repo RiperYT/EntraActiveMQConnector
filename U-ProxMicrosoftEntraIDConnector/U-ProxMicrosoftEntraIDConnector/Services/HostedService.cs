@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.Graph.Models;
 using System.Text.Json;
 using U_ProxMicrosoftEntraIDConnector.Data;
 using U_ProxMicrosoftEntraIDConnector.Data.Abstractions;
@@ -13,6 +14,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
         private const double _updateDeltaMinutes = 15;
 
         private readonly IEntraService _entraService;
+        //private readonly EntraService _entraService;
         private readonly IBrockerService _brockerService;
         private readonly IUserRepository _userRepository;
         private readonly ISettingsRepository _settingsRepository;
@@ -31,6 +33,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             _userRepository = new UserRepository(dataContext);
             _brockerService = new ArtemisService();
             _entraService = new EntraService();
+            //_entraService = new EntraService();
 
             try
             {
@@ -38,7 +41,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                 if (settings != null)
                 {
                     _brockerService.Connect(settings.DomenBrocker, settings.PortBroker, settings.UsernameBroker, settings.PasswordBroker);
-                    _entraService.Connect(settings.TenatIdEntra, settings.ClientIdEntra);
+                    //_entraService.Connect(settings.TenatIdEntra, settings.ClientIdEntra);
                 }
             }
             catch (Exception ex) {
@@ -51,17 +54,28 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
         {
             while (true)
             {
-                if (_entraService.CheckConnection())
+                /*var p = false;
+                try
+                {
+                    await _entraService.GetAllUsers();
+                    p = true;
+                }
+                catch (Exception _) { }*/
+
+                if (await _entraService.CheckConnection())
                     break;
                 else
-                    Thread.Sleep(5000);
+                    Thread.Sleep(120000);
             }
             while (true)
             {
+                Console.WriteLine("Start While");
                 try
                 {
                     var users = await _entraService.GetAllUsers();
+                    //Console.WriteLine($"{users.Count} users");
                     var oldUsers = _userRepository.GetAll();
+                    //Console.WriteLine($"{oldUsers.Count} old users ");
 
                     //var newUsers = users.Where(user => oldUsers.First(userOld => userOld.Id.Equals(user.Id)) == null).ToList();
                     //_userRepository.AddRange(newUsers);
@@ -103,16 +117,23 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
 
                     if (_brockerService.CheckConnection())
                     {
-                        var usersSend = _userRepository.GetAll().Select(t => t.UpdateTime > _lastSend);
-                        _brockerService.Send(JsonSerializer.Serialize(usersSend), "q");
-                        _lastSend = DateTime.Now;
+                        var settings = _settingsRepository.Get();
+                        if (settings != null)
+                        {
+                            var usersSend = _userRepository.GetAll().Select(t => t.UpdateTime > settings.LastUpdate);
+                            _brockerService.Send(JsonSerializer.Serialize(usersSend), "q");
+                            settings.LastUpdate = DateTime.Now;
+                            _settingsRepository.Add(settings);
+                        }
                     }
                 }
                 catch (Exception ex) {
                     Console.WriteLine(ex.Message);
                 }
 
-                Thread.Sleep(_lastRead.AddMinutes(_updateDeltaMinutes).Microsecond - DateTime.Now.Microsecond);
+                //Thread.Sleep(_lastRead.AddMinutes(_updateDeltaMinutes).Microsecond - DateTime.Now.Microsecond);
+                Thread.Sleep(1000);
+                Console.WriteLine("End");
             }
         }
 

@@ -25,7 +25,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
         {
             try
             {
-                _entraService.Connect(tenantId, clientId);
+                /*_entraService.Connect(tenantId, clientId);
                 var settings = _settingsRepository.Get();
                 if (settings == null)
                 {
@@ -36,14 +36,14 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
                     settings.TenatIdEntra = tenantId;
                     settings.ClientIdEntra = clientId;
                 }
-                _settingsRepository.Add(settings);
-                return "Success connected";
+                _settingsRepository.Add(settings);*/
+                return _entraService.Connect(tenantId, clientId); ;
             }
             catch (Exception ex)
             {
-                var settings = _settingsRepository.Get();
+                /*var settings = _settingsRepository.Get();
                 if (settings != null)
-                    _entraService.Connect(settings.TenatIdEntra, settings.ClientIdEntra);
+                    _entraService.Connect(settings.TenatIdEntra, settings.ClientIdEntra);*/
                 return ex.Message;
             }
         }
@@ -58,7 +58,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
                 var settings = _settingsRepository.Get();
                 if (settings == null)
                 {
-                    settings = new SettingsEntity(domen, port, username, password, "", "");
+                    settings = new SettingsEntity(domen, port, username, password/*, "", ""*/, DateTime.MinValue);
                 }
                 else
                 {
