@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
+using U_ProxMicrosoftEntraIDConnector.Common;
 using U_ProxMicrosoftEntraIDConnector.Data.Abstractions;
 using U_ProxMicrosoftEntraIDConnector.Services.Abstractions;
 
@@ -19,8 +21,18 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
         [HttpGet("getStatus")]
         public async Task<string> Status(string secureToken)
         {
-            var entra = await _entraService.CheckConnection() == true ? "connected" : "not connected";
-            return $"Entra id: {entra}";
+            try
+            {
+                if (!secureToken.Equals(StaticConnections.SecureToken))
+                    throw new Exception("Not correct secure token");
+                var entra = await _entraService.CheckConnection() == true ? "connected" : "not connected";
+                var brocker = await _brockerService.CheckConnection() == true ? "connected" : "not connected";
+                return $"Entra id: {entra}\nBrocker : {brocker}";
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
         }
 
         /*[HttpGet("update")]

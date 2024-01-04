@@ -18,6 +18,9 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Entities
         [Column("password_brocker")]
         public string PasswordBroker { get; set; }
 
+        [Column("queue_name")]
+        public string QueueName { get; set; }
+
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
         //[Key]
@@ -28,12 +31,13 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Entities
         //public string ClientIdEntra { get; set; }
 
 
-        public SettingsEntity(string domenBrocker, string portBroker, string usernameBroker, string passwordBroker/*, string tenatIdEntra, string clientIdEntra*/, DateTime lastUpdate)
+        public SettingsEntity(string domenBrocker, string portBroker, string usernameBroker, string passwordBroker, string queueName,  DateTime lastUpdate)
         {
             DomenBrocker = domenBrocker;
             PortBroker = portBroker;
             UsernameBroker = usernameBroker;
             PasswordBroker = passwordBroker;
+            QueueName = queueName;
             LastUpdate = lastUpdate;
             //TenatIdEntra = tenatIdEntra;
             //ClientIdEntra = clientIdEntra;

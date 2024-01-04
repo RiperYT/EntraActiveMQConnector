@@ -1,4 +1,8 @@
 ﻿using ActiveMQ.Artemis.Client;
+using Amqp.Framing;
+using System.Net.Http.Headers;
+using System.Text;
+using U_ProxMicrosoftEntraIDConnector.Data.Abstractions;
 using U_ProxMicrosoftEntraIDConnector.Services.Abstractions;
 
 namespace U_ProxMicrosoftEntraIDConnector.Services
@@ -6,20 +10,107 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
     public class ArtemisService : IBrockerService
     {
         private static IConnection? _connection;
-        public async void Connect(string domen, string port, string login, string password)
+        private readonly ISettingsRepository _settingsRepository;
+        public ArtemisService(ISettingsRepository settingsRepository)
         {
-            var connectionFactory = new ConnectionFactory();
-            var endpoint = ActiveMQ.Artemis.Client.Endpoint.Create(domen, int.Parse(port), login, password);
-            _connection = await connectionFactory.CreateAsync(endpoint);
+            _settingsRepository = settingsRepository;
         }
-        public async void Send(string message, string queue)
+
+        public async Task<bool> Connect(string domen, string port, string login, string password)
         {
-            var producer = await _connection.CreateProducerAsync("a1", RoutingType.Anycast);
-            await producer.SendAsync(new Message(message));
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    using (var request = new HttpRequestMessage(new HttpMethod("GET"), $"http://{domen}:{port}/api/message/"))
+                    {
+                        var base64authorization = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{login}:{password}"));
+                        request.Headers.TryAddWithoutValidation("Authorization", $"Basic {base64authorization}");
+
+                        request.Content = new StringContent("");
+                        request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded");
+
+                        var response = await httpClient.SendAsync(request);
+                        var answer = await response.Content.ReadAsStringAsync();
+                        if (!answer.Contains("HTTP ERROR 500"))
+                            return false;
+                        else
+                            return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
         }
-        public bool CheckConnection()
+        public async Task<bool> Send(string message, string queue)
         {
-            return _connection != null;
+            try
+            {
+                var settings = _settingsRepository.Get();
+                if (settings != null)
+                    using (var httpClient = new HttpClient())
+                    {
+                        using (var request = new HttpRequestMessage(new HttpMethod("POST"), $"http://{settings.DomenBrocker}:{settings.PortBroker}/api/message/{queue}?type=queue"))
+                        {
+                            var base64authorization = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{settings.UsernameBroker}:{settings.PasswordBroker}"));
+                            request.Headers.TryAddWithoutValidation("Authorization", $"Basic {base64authorization}");
+
+                            request.Content = new StringContent($"body={message}");
+                            request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded");
+
+                            var response = await httpClient.SendAsync(request);
+                            var answer = await response.Content.ReadAsStringAsync();
+                            Console.WriteLine(answer);
+                            if (!answer.Contains("Message sent"))
+                                return false;
+                            else
+                                return true;
+                        }
+                    }
+                else
+                    return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
+        public async Task<bool> CheckConnection()
+        {
+            try
+            {
+                var settings = _settingsRepository.Get();
+                if (settings != null)
+                    using (var httpClient = new HttpClient())
+                    {
+                        using (var request = new HttpRequestMessage(new HttpMethod("GET"), $"http://{settings.DomenBrocker}:{settings.PortBroker}/api/message/"))
+                        {
+                            var base64authorization = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{settings.UsernameBroker}:{settings.PasswordBroker}"));
+                            request.Headers.TryAddWithoutValidation("Authorization", $"Basic {base64authorization}");
+
+                            request.Content = new StringContent("");
+                            request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded");
+
+                            var response = await httpClient.SendAsync(request);
+                            var answer = await response.Content.ReadAsStringAsync();
+                            if (answer.Contains("HTTP ERROR 500"))
+                                return true;
+                            else
+                                return false;
+                        }
+                    }
+                else
+                    return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
         }
     }
 }

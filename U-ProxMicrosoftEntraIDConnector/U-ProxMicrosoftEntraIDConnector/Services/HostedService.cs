@@ -9,12 +9,11 @@ using U_ProxMicrosoftEntraIDConnector.Services.Abstractions;
 
 namespace U_ProxMicrosoftEntraIDConnector.Services
 {
-    public class HostedService /*: IHostedService*/
+    public class HostedService
     {
         private const double _updateDeltaMinutes = 15;
 
         private readonly IEntraService _entraService;
-        //private readonly EntraService _entraService;
         private readonly IBrockerService _brockerService;
         private readonly IUserRepository _userRepository;
         private readonly ISettingsRepository _settingsRepository;
@@ -22,18 +21,13 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
         private DateTime _lastRead;
         private DateTime _lastSend;
 
-        public HostedService(/*ISettingsRepository settings, IUserRepository userRepository, IBrockerService brockerService, IEntraService entraService*/)
+        public HostedService()
         {
-            /*_settingsRepository = settings;
-            _userRepository = userRepository;   
-            _brockerService = brockerService;
-            _entraservice = entraService;*/
             var dataContext = new DataContext();
             _settingsRepository = new SettingsRepository(dataContext);
             _userRepository = new UserRepository(dataContext);
-            _brockerService = new ArtemisService();
+            _brockerService = new ArtemisService(_settingsRepository);
             _entraService = new EntraService();
-            //_entraService = new EntraService();
 
             try
             {
@@ -41,7 +35,6 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                 if (settings != null)
                 {
                     _brockerService.Connect(settings.DomenBrocker, settings.PortBroker, settings.UsernameBroker, settings.PasswordBroker);
-                    //_entraService.Connect(settings.TenatIdEntra, settings.ClientIdEntra);
                 }
             }
             catch (Exception ex) {
@@ -54,14 +47,6 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
         {
             while (true)
             {
-                /*var p = false;
-                try
-                {
-                    await _entraService.GetAllUsers();
-                    p = true;
-                }
-                catch (Exception _) { }*/
-
                 if (await _entraService.CheckConnection())
                     break;
                 else
@@ -73,17 +58,11 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                 try
                 {
                     var users = await _entraService.GetAllUsers();
-                    //Console.WriteLine($"{users.Count} users");
                     var oldUsers = _userRepository.GetAll();
-                    //Console.WriteLine($"{oldUsers.Count} old users ");
-
-                    //var newUsers = users.Where(user => oldUsers.First(userOld => userOld.Id.Equals(user.Id)) == null).ToList();
-                    //_userRepository.AddRange(newUsers);
 
                     var newUsers = new List<UserEntity>();
                     var updateUsers = new List<UserEntity>();
 
-                    //users = users.Where(user => oldUsers.First(userOld => userOld.Id.Equals(user.Id)) != null).ToList();
                     foreach (var user in users)
                     {
                         var oldUser = oldUsers.First(t => t.Id.Equals(user.Id));
@@ -115,13 +94,13 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                     _userRepository.UpdateRange(updateUsers);
                     _lastRead = DateTime.Now;
 
-                    if (_brockerService.CheckConnection())
+                    if (await _brockerService.CheckConnection())
                     {
                         var settings = _settingsRepository.Get();
                         if (settings != null)
                         {
                             var usersSend = _userRepository.GetAll().Select(t => t.UpdateTime > settings.LastUpdate);
-                            _brockerService.Send(JsonSerializer.Serialize(usersSend), "q");
+                            await _brockerService.Send(JsonSerializer.Serialize(usersSend), settings.QueueName);
                             settings.LastUpdate = DateTime.Now;
                             _settingsRepository.Add(settings);
                         }
@@ -131,14 +110,9 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                     Console.WriteLine(ex.Message);
                 }
 
-                //Thread.Sleep(_lastRead.AddMinutes(_updateDeltaMinutes).Microsecond - DateTime.Now.Microsecond);
                 Thread.Sleep(1000);
                 Console.WriteLine("End");
             }
         }
-
-        /*public async Task StopAsync(CancellationToken cancellationToken)
-        {
-        }*/
     }
 }

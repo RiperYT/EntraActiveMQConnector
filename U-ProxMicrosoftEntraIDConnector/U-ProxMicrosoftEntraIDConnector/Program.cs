@@ -13,8 +13,8 @@ builder.Services.AddDbContext<DataContext>();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
-builder.Services.AddSingleton<IEntraService, EntraService>();
-builder.Services.AddSingleton<IBrockerService, ArtemisService>();
+builder.Services.AddScoped<IEntraService, EntraService>();
+builder.Services.AddScoped<IBrockerService, ArtemisService>();
 
 //builder.Services.AddHostedService<HostedService>();
 

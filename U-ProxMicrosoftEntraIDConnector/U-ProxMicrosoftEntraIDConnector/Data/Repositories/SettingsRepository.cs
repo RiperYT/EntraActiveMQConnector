@@ -15,13 +15,17 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Repositories
         {
             var settingsBefore = Get();
             if (settingsBefore != null)
-                _context.Set<SettingsEntity>().Remove(settingsBefore);
+                //_context.Settings.Remove(settingsBefore);
+            _context.Set<SettingsEntity>().Remove(settingsBefore);
 
             _context.Set<SettingsEntity>().Add(settings);
+            _context.SaveChanges();
+            //_context.
         }
 
         public SettingsEntity? Get()
         {
+            //_context.Settings.ToList();
             return _context.Set<SettingsEntity>().FirstOrDefault();
         }
     }

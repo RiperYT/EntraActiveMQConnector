@@ -58,41 +58,10 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                 return true;
             else
                 return false;
-            /*Console.WriteLine(StaticConnections.GraphServiceClient == null);
-            if (StaticConnections.GraphServiceClient != null)
-            {
-                var answer = await StaticConnections.GraphServiceClient.Me.GetAsync();
-
-                //var task = StaticConnections.GraphServiceClient.Me.GetAsync();
-
-                //var completedTask = await Task.WhenAny(StaticConnections.GraphServiceClient.Me.GetAsync(), Task.Delay(TimeSpan.FromSeconds(1)));
-
-                //if (completedTask == task)
-                if (answer != null)
-                {
-                    //var answer = await task;
-                    if (answer.Mail.Contains('@'))
-                        return true;
-                    else
-                        return false;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                return false;
-            }*/
         }
 
         public async Task<List<UserEntity>> GetAllUsers()
         {
-            /*if (_graphServiceClient == null)
-                return new List<UserEntity>();
-
-            var users = await _graphServiceClient.Users.GetAsync();*/
 
             if (StaticConnections.GraphServiceClient == null)
                 return new List<UserEntity>();
@@ -124,11 +93,6 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
         //ToDO
         public async Task<List<UserEntity>> GetDeltaUsers()
         {
-            /*if (_graphServiceClient == null)
-                return new List<UserEntity>();
-
-            var users = await _graphServiceClient.Users.GetAsync();*/
-
             if (StaticConnections.GraphServiceClient == null)
                 return new List<UserEntity>();
 
@@ -160,7 +124,6 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
         {
             try
             {
-                //if (_graphServiceClient != null)
                 if (StaticConnections.GraphServiceClient != null)
                 {
                     FileStream fileStream = new FileStream("console.txt", FileMode.Create);
@@ -169,15 +132,11 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                     Console.SetOut(streamWriter);
 
                     Console.Clear();
-                    //var users = _graphServiceClient.Me.GetAsync();
                     var users = StaticConnections.GraphServiceClient.Me.GetAsync();
                     Thread.Sleep(1000);
 
                     streamWriter.Close();
                     fileStream.Close();
-                    /*var standardOutput = new StreamWriter(Console.OpenStandardOutput());
-                    standardOutput.AutoFlush = true;
-                    Console.SetOut(standardOutput);*/
                     Console.SetOut(oldWriter);
 
                     Console.WriteLine("Code end.");
@@ -203,15 +162,8 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                 if (StaticConnections.GraphServiceClient != null)
                 {
                     var answer = await StaticConnections.GraphServiceClient.Me.GetAsync();
-
-                    //var task = StaticConnections.GraphServiceClient.Me.GetAsync();
-
-                    //var completedTask = await Task.WhenAny(StaticConnections.GraphServiceClient.Me.GetAsync(), Task.Delay(TimeSpan.FromSeconds(1)));
-
-                    //if (completedTask == task)
                     if (answer != null)
                     {
-                        //var answer = await task;
                         if (answer.Mail != null)
                             return answer.Mail;
                         else

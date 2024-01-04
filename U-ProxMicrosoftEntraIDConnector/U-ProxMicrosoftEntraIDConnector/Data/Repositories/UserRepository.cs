@@ -25,11 +25,13 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Repositories
         public void AddRange(List<UserEntity> users)
         {
             _context.Set<UserEntity>().AddRange(users);
+            _context.SaveChanges();
         }
 
         public void UpdateRange(List<UserEntity> users)
         {
             _context.Set<UserEntity>().UpdateRange(users);
+            _context.SaveChanges();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using U_ProxMicrosoftEntraIDConnector.Common;
 using U_ProxMicrosoftEntraIDConnector.Data.Abstractions;
 using U_ProxMicrosoftEntraIDConnector.Data.Entities;
 using U_ProxMicrosoftEntraIDConnector.Services.Abstractions;
@@ -25,40 +26,30 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
         {
             try
             {
-                /*_entraService.Connect(tenantId, clientId);
-                var settings = _settingsRepository.Get();
-                if (settings == null)
-                {
-                    settings = new SettingsEntity("", "", "", "", tenantId, clientId);
-                }
-                else
-                {
-                    settings.TenatIdEntra = tenantId;
-                    settings.ClientIdEntra = clientId;
-                }
-                _settingsRepository.Add(settings);*/
+                if (!secureToken.Equals(StaticConnections.SecureToken))
+                    throw new Exception("Not correct secure token");
                 return _entraService.Connect(tenantId, clientId); ;
             }
             catch (Exception ex)
             {
-                /*var settings = _settingsRepository.Get();
-                if (settings != null)
-                    _entraService.Connect(settings.TenatIdEntra, settings.ClientIdEntra);*/
                 return ex.Message;
             }
         }
 
         [HttpGet("setActiveMQ")]
-        public string SignActiveMQ(string token, string domen, string port, string username, string password)
+        public async Task<string> SignActiveMQ(string secureToken, string domen, string port, string username, string password, string queueName)
         {
             try
             {
-                _brockerService.Connect(domen, port, username, password);
+                if (!secureToken.Equals(StaticConnections.SecureToken))
+                    throw new Exception("Not correct secure token");
+                if (!await _brockerService.Connect(domen, port, username, password))
+                    throw new Exception("Cannot connect");
                 //Thread.Sleep(5000);
                 var settings = _settingsRepository.Get();
                 if (settings == null)
                 {
-                    settings = new SettingsEntity(domen, port, username, password/*, "", ""*/, DateTime.MinValue);
+                    settings = new SettingsEntity(domen, port, username, password, queueName, DateTime.MinValue);
                 }
                 else
                 {
@@ -66,16 +57,16 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
                     settings.PortBroker = port;
                     settings.UsernameBroker = username;
                     settings.PasswordBroker = password;
+                    settings.QueueName = queueName;
                 }
                 _settingsRepository.Add(settings);
-                //_brockerService.Send("Hello", "q");
                 return "Success connected";
             }
             catch (Exception ex)
             {
                 var settings = _settingsRepository.Get();
                 if (settings != null)
-                    _brockerService.Connect(settings.DomenBrocker, settings.PortBroker, settings.UsernameBroker, settings.PasswordBroker);
+                    await _brockerService.Connect(settings.DomenBrocker, settings.PortBroker, settings.UsernameBroker, settings.PasswordBroker);
                 return ex.Message;
             }
         }

@@ -4,8 +4,8 @@ namespace U_ProxMicrosoftEntraIDConnector.Services.Abstractions
 {
     public interface IBrockerService
     {
-        public void Connect(string domen, string port, string login, string password);
-        public void Send(string message, string queue);
-        public bool CheckConnection();
+        public Task<bool> Connect(string domen, string port, string login, string password);
+        public Task<bool> Send(string message, string queue);
+        public Task<bool> CheckConnection();
     }
 }
