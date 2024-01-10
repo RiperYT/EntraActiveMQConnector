@@ -22,13 +22,29 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
         }
 
         [HttpGet("setEntraId")]
-        public string SetEntraId(string secureToken, string tenantId, string clientId)
+        public async Task<string> SetEntraId(string secureToken, string tenantId, string clientId)
         {
             try
             {
                 if (!secureToken.Equals(StaticConnections.SecureToken))
                     throw new Exception("Not correct secure token");
-                return _entraService.Connect(tenantId, clientId); ;
+                return _entraService.Connect(tenantId, clientId);
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        [HttpGet("confirmEntraId")]
+        public async Task<string> ConfirmEntraId(string secureToken)
+        {
+            try
+            {
+                if (!secureToken.Equals(StaticConnections.SecureToken))
+                    throw new Exception("Not correct secure token");
+
+                return await _entraService.ConfirmConnection() ? "Confirmed" : "Not confirmed, try new connection";
             }
             catch (Exception ex)
             {
@@ -49,7 +65,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
                 var settings = _settingsRepository.Get();
                 if (settings == null)
                 {
-                    settings = new SettingsEntity(domen, port, username, password, queueName, DateTime.MinValue);
+                    settings = new SettingEntity(domen, port, username, password, queueName, DateTime.MinValue, DateTime.MinValue);
                 }
                 else
                 {

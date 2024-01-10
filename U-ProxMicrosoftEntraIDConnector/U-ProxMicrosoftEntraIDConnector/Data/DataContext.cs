@@ -6,7 +6,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Data
     public class DataContext : DbContext
     {
         public DbSet<UserEntity> Users => Set<UserEntity>();
-        public DbSet<SettingsEntity> Settings => Set<SettingsEntity>();
+        public DbSet<SettingEntity> Settings => Set<SettingEntity>();
         public DataContext()
         {
             Database.EnsureCreated();

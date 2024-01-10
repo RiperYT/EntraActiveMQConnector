@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Graph.Models;
 using System.Text.Json;
+using U_ProxMicrosoftEntraIDConnector.Common;
 using U_ProxMicrosoftEntraIDConnector.Data;
 using U_ProxMicrosoftEntraIDConnector.Data.Abstractions;
 using U_ProxMicrosoftEntraIDConnector.Data.Entities;
@@ -26,7 +27,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             var dataContext = new DataContext();
             _settingsRepository = new SettingsRepository(dataContext);
             _userRepository = new UserRepository(dataContext);
-            _brockerService = new ArtemisService(_settingsRepository);
+            _brockerService = new ArtemisService(); //new ActiveMQClassicService(_settingsRepository);
             _entraService = new EntraService();
 
             try
@@ -50,22 +51,30 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                 if (await _entraService.CheckConnection())
                     break;
                 else
-                    Thread.Sleep(120000);
+                    Thread.Sleep(10000);
             }
             while (true)
             {
                 Console.WriteLine("Start While");
                 try
                 {
+                    var settingsTime = _settingsRepository.Get();
+                    var date = DateTime.MinValue;
+                    if (settingsTime != null)
+                        date = settingsTime.LastGet;
+
+                    var dateGet = DateTime.UtcNow;
                     var users = await _entraService.GetAllUsers();
-                    var oldUsers = _userRepository.GetAll();
+                    ////var users = await _entraService.GetAllUsers();
+                    //var oldUsers = _userRepository.GetAll();
 
                     var newUsers = new List<UserEntity>();
                     var updateUsers = new List<UserEntity>();
 
                     foreach (var user in users)
                     {
-                        var oldUser = oldUsers.First(t => t.Id.Equals(user.Id));
+                        //var oldUser = oldUsers.FirstOrDefault(t => t.Id.Equals(user.Id));
+                        var oldUser = _userRepository.Get(user.Id);
                         if (oldUser != null)
                         {
                             var p = false;
@@ -82,27 +91,36 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
 
                             if (p == true)
                             {
+                                Console.WriteLine("Update" + user.Id);
                                 updateUsers.Add(user);
                             }
                         }
                         else
                         {
+                            Console.WriteLine("Added" + user.Id);
                             newUsers.Add(user);
                         }
                     }
+                    Console.WriteLine(users.Count);
                     _userRepository.AddRange(newUsers);
+                    Console.WriteLine("Added");
                     _userRepository.UpdateRange(updateUsers);
-                    _lastRead = DateTime.Now;
+                    Console.WriteLine("Updated users");
+                    _lastRead = DateTime.UtcNow;
 
                     if (await _brockerService.CheckConnection())
                     {
                         var settings = _settingsRepository.Get();
                         if (settings != null)
                         {
-                            var usersSend = _userRepository.GetAll().Select(t => t.UpdateTime > settings.LastUpdate);
-                            await _brockerService.Send(JsonSerializer.Serialize(usersSend), settings.QueueName);
-                            settings.LastUpdate = DateTime.Now;
-                            _settingsRepository.Add(settings);
+                            var usersSend = _userRepository.GetAll().Where(t => t.UpdateTime > settings.LastUpdate);
+                            if (usersSend.Any())
+                            {
+                                await _brockerService.Send(JsonSerializer.Serialize(usersSend), settings.QueueName);
+                                settings.LastUpdate = DateTime.UtcNow;
+                                settings.LastGet = dateGet;
+                                _settingsRepository.Add(settings);
+                            }
                         }
                     }
                 }

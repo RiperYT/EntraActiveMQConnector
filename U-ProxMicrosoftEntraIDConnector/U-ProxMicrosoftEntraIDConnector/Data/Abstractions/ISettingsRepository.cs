@@ -4,8 +4,9 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Abstractions
 {
     public interface ISettingsRepository
     {
-        public void Add(SettingsEntity settings);
+        public void Add(SettingEntity settings);
 
-        public SettingsEntity? Get();
+        public SettingEntity? Get();
+        public void SaveChanges();
     }
 }

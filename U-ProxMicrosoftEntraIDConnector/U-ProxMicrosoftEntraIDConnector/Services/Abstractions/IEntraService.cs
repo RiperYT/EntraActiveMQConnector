@@ -9,10 +9,10 @@ namespace U_ProxMicrosoftEntraIDConnector.Services.Abstractions
         public string Connect(string tenantId, string clientId);
 
         public Task<bool> CheckConnection();
+        public Task<bool> ConfirmConnection();
 
         public Task<List<UserEntity>> GetAllUsers();
 
-        //ToDO
-        public Task<List<UserEntity>> GetDeltaUsers();
+        public Task<List<UserEntity>> GetDeltaUsers(DateTime filterDate);
     }
 }

@@ -53,11 +53,42 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
 
         public async Task<bool> CheckConnection()
         {
-            var answer = await GetMail();
+            /*var answer = await GetMail();
             if (answer.Contains('@'))
                 return true;
             else
+                return false;*/
+            return StaticConnections.IsConnected;
+        }
+
+        public async Task<bool> ConfirmConnection()
+        {
+            try
+            {
+                if (StaticConnections.GraphServiceClient != null)
+                {
+                    var answer = await GetAllUsers();
+                    if (answer.Count > 0)
+                    {
+                        StaticConnections.IsConnected = true;
+                        return true;
+                    }
+                    else
+                    {
+                        StaticConnections.IsConnected = false;
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
                 return false;
+            }
         }
 
         public async Task<List<UserEntity>> GetAllUsers()
@@ -66,8 +97,21 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             if (StaticConnections.GraphServiceClient == null)
                 return new List<UserEntity>();
 
-            var users = await StaticConnections.GraphServiceClient.Users.GetAsync();
+            var users = await StaticConnections.GraphServiceClient.Users.GetAsync((requestConfiguration) =>
+            {
+                requestConfiguration.QueryParameters.Select = new string[] { "id", "surname", "givenName", "jobTitle", "userPrincipalName", "mobilePhone" };
+            });
 
+            /*var users2 = await StaticConnections.GraphServiceClient.Users.GetAsync();
+            foreach (var user in users2.Value)
+            {
+                if (!user.Id.Equals("0f729d98-fc17-4cca-982a-1580829b2006"))
+                {
+                    //Console.WriteLine(user.acc);
+                    user.AccountEnabled = false;
+                    await StaticConnections.GraphServiceClient.Users[user.Id].PatchAsync(user);
+                }
+            }*/
             if (users == null)
                 return new List<UserEntity>();
 
@@ -77,26 +121,32 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             var answer = new List<UserEntity>();
             foreach (var user in users.Value)
             {
+
                 if (user.Id != null)
                     answer.Add(new UserEntity(user.Id,
-                                              user.Surname == null ? "" : user.Surname,
-                                              user.GivenName == null ? "" : user.GivenName,
-                                              user.JobTitle == null ? "" : user.JobTitle,
-                                              user.Mail == null ? "" : user.Mail,
-                                              user.MobilePhone == null ? "" : user.MobilePhone,
-                                              DateTime.Now));
+                                              user.Surname ?? "",
+                                              user.GivenName ?? "",
+                                              user.JobTitle ?? "",
+                                              user.UserPrincipalName ?? "",
+                                              user.MobilePhone ?? "",
+                                              DateTime.UtcNow));
             }
 
             return answer;
         }
 
-        //ToDO
-        public async Task<List<UserEntity>> GetDeltaUsers()
+        [Obsolete]
+        public async Task<List<UserEntity>> GetDeltaUsers(DateTime filterDate)
         {
             if (StaticConnections.GraphServiceClient == null)
                 return new List<UserEntity>();
 
-            var users = await StaticConnections.GraphServiceClient.Users.GetAsync();
+            var users = await StaticConnections.GraphServiceClient.Users.Delta.GetAsync((requestConfiguration) =>
+            {
+                requestConfiguration.QueryParameters.Select = new string[] { "id", "surname", "givenName", "jobTitle", "userPrincipalName", "mobilePhone"};
+                //requestConfiguration.QueryParameters.Filter = $"accountEnabled eq true and createdDateTime gt {filterDate.ToString("s") + "Z"}";
+                //requestConfiguration.QueryParameters.Filter = $"createdDateTime gt {filterDate.ToString("s") + "Z"}";
+            });
 
             if (users == null)
                 return new List<UserEntity>();
@@ -109,12 +159,12 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             {               
                 if (user.Id != null)
                     answer.Add(new UserEntity(user.Id,
-                                              user.Surname == null ? "" : user.Surname,
-                                              user.GivenName == null ? "" : user.GivenName,
-                                              user.JobTitle == null ? "" : user.JobTitle,
-                                              user.Mail == null ? "" : user.Mail,
-                                              user.MobilePhone == null ? "" : user.MobilePhone,
-                                              DateTime.Now));
+                                              user.Surname ?? "",
+                                              user.GivenName ?? "",
+                                              user.JobTitle ?? "",
+                                              user.UserPrincipalName ?? "",
+                                              user.MobilePhone ?? "",
+                                              DateTime.UtcNow));
             }
 
             return new List<UserEntity>();

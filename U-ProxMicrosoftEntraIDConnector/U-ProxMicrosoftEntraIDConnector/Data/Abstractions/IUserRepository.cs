@@ -10,5 +10,6 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Abstractions
         public void AddRange(List<UserEntity> users);
 
         public void UpdateRange(List<UserEntity> users);
+        public void SaveChanges();
     }
 }

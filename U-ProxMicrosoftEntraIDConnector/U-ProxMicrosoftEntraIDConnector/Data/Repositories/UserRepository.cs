@@ -1,4 +1,5 @@
-﻿using U_ProxMicrosoftEntraIDConnector.Data.Abstractions;
+﻿using Microsoft.EntityFrameworkCore;
+using U_ProxMicrosoftEntraIDConnector.Data.Abstractions;
 using U_ProxMicrosoftEntraIDConnector.Data.Entities;
 
 namespace U_ProxMicrosoftEntraIDConnector.Data.Repositories
@@ -14,12 +15,16 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Repositories
 
         public UserEntity? Get(string id)
         {
-            return _context.Set<UserEntity>().Where(t => t.Id.Equals(id)).FirstOrDefault();
+            var user = _context.Set<UserEntity>().AsNoTracking().Where(t => t.Id.Equals(id)).FirstOrDefault();
+            _context.SaveChanges();
+            return user;
         }
 
         public List<UserEntity> GetAll()
         {
-            return _context.Set<UserEntity>().ToList();
+            var users = _context.Set<UserEntity>().AsNoTracking().ToList();
+            _context.SaveChanges();
+            return users;
         }
 
         public void AddRange(List<UserEntity> users)
@@ -31,6 +36,10 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Repositories
         public void UpdateRange(List<UserEntity> users)
         {
             _context.Set<UserEntity>().UpdateRange(users);
+            _context.SaveChanges();
+        }
+        public void SaveChanges()
+        {
             _context.SaveChanges();
         }
     }

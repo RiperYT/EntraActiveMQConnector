@@ -11,22 +11,28 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Repositories
             _context = context;
         }
 
-        public void Add(SettingsEntity settings)
+        public void Add(SettingEntity settings)
         {
             var settingsBefore = Get();
             if (settingsBefore != null)
                 //_context.Settings.Remove(settingsBefore);
-            _context.Set<SettingsEntity>().Remove(settingsBefore);
+            _context.Set<SettingEntity>().Remove(settingsBefore);
+            _context.SaveChanges();
 
-            _context.Set<SettingsEntity>().Add(settings);
+            _context.Set<SettingEntity>().Add(settings);
             _context.SaveChanges();
             //_context.
         }
 
-        public SettingsEntity? Get()
+        public SettingEntity? Get()
         {
             //_context.Settings.ToList();
-            return _context.Set<SettingsEntity>().FirstOrDefault();
+            return _context.Set<SettingEntity>().FirstOrDefault();
+        }
+
+        public void SaveChanges()
+        {
+            _context.SaveChanges();
         }
     }
 }

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Builder;
 using U_ProxMicrosoftEntraIDConnector.Data;
 using U_ProxMicrosoftEntraIDConnector.Data.Abstractions;
 using U_ProxMicrosoftEntraIDConnector.Data.Repositories;
@@ -14,11 +13,9 @@ builder.Services.AddDbContext<DataContext>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
 builder.Services.AddScoped<IEntraService, EntraService>();
+//builder.Services.AddScoped<IBrockerService, ActiveMQClassicService>();
 builder.Services.AddScoped<IBrockerService, ArtemisService>();
 
-//builder.Services.AddHostedService<HostedService>();
-
-//var hosted = new HostedService();
 new Thread(() => new HostedService()).Start();
 
 builder.Services.AddEndpointsApiExplorer();

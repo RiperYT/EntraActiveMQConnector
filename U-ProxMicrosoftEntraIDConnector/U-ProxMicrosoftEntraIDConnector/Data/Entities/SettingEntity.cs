@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace U_ProxMicrosoftEntraIDConnector.Data.Entities
 {
-    public class SettingsEntity
+    public class SettingEntity
     {
         [Key]
         [Column("domen_brocker")]
@@ -23,6 +23,9 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Entities
 
         [Column("last_update")]
         public DateTime LastUpdate { get; set; }
+
+        [Column("last_get")]
+        public DateTime LastGet { get; set; }
         //[Key]
         //[Column("tenantId_Entra")]
         //public string TenatIdEntra { get; set; }
@@ -31,7 +34,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Entities
         //public string ClientIdEntra { get; set; }
 
 
-        public SettingsEntity(string domenBrocker, string portBroker, string usernameBroker, string passwordBroker, string queueName,  DateTime lastUpdate)
+        public SettingEntity(string domenBrocker, string portBroker, string usernameBroker, string passwordBroker, string queueName,  DateTime lastUpdate, DateTime lastGet)
         {
             DomenBrocker = domenBrocker;
             PortBroker = portBroker;
@@ -39,8 +42,11 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Entities
             PasswordBroker = passwordBroker;
             QueueName = queueName;
             LastUpdate = lastUpdate;
+            LastGet = lastGet;
+
             //TenatIdEntra = tenatIdEntra;
             //ClientIdEntra = clientIdEntra;
+
         }
     }
 }
