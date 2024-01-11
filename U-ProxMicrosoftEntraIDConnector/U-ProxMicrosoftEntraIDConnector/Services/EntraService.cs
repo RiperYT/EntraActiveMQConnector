@@ -47,7 +47,6 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             //var result = _graphServiceClient.External.Connections["{externalConnection-id}"];
             var result = StaticConnections.GraphServiceClient.External.Connections["{externalConnection-id}"];
 
-
             return GetCode();
         }
 
@@ -67,8 +66,8 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             {
                 if (StaticConnections.GraphServiceClient != null)
                 {
-                    var answer = await GetAllUsers();
-                    if (answer.Count > 0)
+                    var answer = GetCode();
+                    if (!answer.Contains("sign"))
                     {
                         StaticConnections.IsConnected = true;
                         return true;

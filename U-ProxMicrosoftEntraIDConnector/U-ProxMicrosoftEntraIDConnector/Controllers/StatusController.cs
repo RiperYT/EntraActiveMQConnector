@@ -38,11 +38,5 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
                     return ex.Message;
             }
         }
-
-        /*[HttpGet("update")]
-        public string Update(string secureToken)
-        {
-            return "Hello";
-        }*/
     }
 }

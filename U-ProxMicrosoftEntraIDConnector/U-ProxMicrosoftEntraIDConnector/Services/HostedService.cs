@@ -121,13 +121,19 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                                 settings.LastUpdate = DateTime.UtcNow;
                                 settings.LastGet = dateGet;
                                 _settingsRepository.Add(settings);
+                                StaticConnections.Logger.Info("Sent to brocker");
                             }
-                            StaticConnections.Logger.Info("Sent to brocker");
+                            else
+                                StaticConnections.Logger.Info("Nothing to sent to brocker");
                         }
                         else
                         {
                             StaticConnections.Logger.Info("Settings for brocker is null");
                         }
+                    }
+                    else
+                    {
+                        StaticConnections.Logger.Info("Brocker is not connected");
                     }
                 }
                 catch (Exception ex) {
@@ -135,7 +141,8 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                     StaticConnections.Logger.Error(ex);
                 }
 
-                Thread.Sleep(_lastRead.Millisecond + TimeSpan.FromMinutes(_updateDeltaMinutes).Milliseconds - DateTime.UtcNow.Millisecond);
+                Thread.Sleep((int)_updateDeltaMinutes*60 * 1000);
+                //Thread.Sleep(_lastRead.Millisecond + TimeSpan.FromMinutes(_updateDeltaMinutes).Milliseconds - DateTime.UtcNow.Millisecond);
                 //Console.WriteLine("End");
             }
         }
