@@ -24,14 +24,18 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
             try
             {
                 if (!secureToken.Equals(StaticConnections.SecureToken))
+                {
+                    StaticConnections.Logger.Warn("Status controller, secure token is not correct");
                     throw new Exception("Not correct secure token");
+                }
                 var entra = await _entraService.CheckConnection() == true ? "connected" : "not connected";
                 var brocker = await _brockerService.CheckConnection() == true ? "connected" : "not connected";
                 return $"Entra id: {entra}\nBrocker : {brocker}";
             }
             catch (Exception ex)
             {
-                return ex.Message;
+                    StaticConnections.Logger.Error(ex);
+                    return ex.Message;
             }
         }
 

@@ -9,5 +9,6 @@ namespace U_ProxMicrosoftEntraIDConnector.Common
         public static GraphServiceClient? GraphServiceClient;
         public static IConnection? Connection;
         public static bool IsConnected = false;
+        public static NLog.Logger Logger;
     }
 }

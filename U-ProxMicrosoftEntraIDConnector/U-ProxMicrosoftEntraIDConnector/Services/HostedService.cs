@@ -39,7 +39,8 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                 }
             }
             catch (Exception ex) {
-                Console.WriteLine(ex.Message);
+                //Console.WriteLine(ex.Message);
+                StaticConnections.Logger.Error(ex);
             }
 
             _ = StartAsync();
@@ -55,7 +56,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             }
             while (true)
             {
-                Console.WriteLine("Start While");
+                //Console.WriteLine("Start While");
                 try
                 {
                     var settingsTime = _settingsRepository.Get();
@@ -65,7 +66,6 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
 
                     var dateGet = DateTime.UtcNow;
                     var users = await _entraService.GetAllUsers();
-                    ////var users = await _entraService.GetAllUsers();
                     //var oldUsers = _userRepository.GetAll();
 
                     var newUsers = new List<UserEntity>();
@@ -91,21 +91,22 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
 
                             if (p == true)
                             {
-                                Console.WriteLine("Update" + user.Id);
+                                //Console.WriteLine("Update" + user.Id);
                                 updateUsers.Add(user);
                             }
                         }
                         else
                         {
-                            Console.WriteLine("Added" + user.Id);
+                            //Console.WriteLine("Added" + user.Id);
                             newUsers.Add(user);
                         }
                     }
-                    Console.WriteLine(users.Count);
+                    //Console.WriteLine(users.Count);
                     _userRepository.AddRange(newUsers);
-                    Console.WriteLine("Added");
+                    //Console.WriteLine("Added");
                     _userRepository.UpdateRange(updateUsers);
-                    Console.WriteLine("Updated users");
+                    //Console.WriteLine("Updated users");
+                    StaticConnections.Logger.Info("Read EntraId");
                     _lastRead = DateTime.UtcNow;
 
                     if (await _brockerService.CheckConnection())
@@ -121,15 +122,21 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                                 settings.LastGet = dateGet;
                                 _settingsRepository.Add(settings);
                             }
+                            StaticConnections.Logger.Info("Sent to brocker");
+                        }
+                        else
+                        {
+                            StaticConnections.Logger.Info("Settings for brocker is null");
                         }
                     }
                 }
                 catch (Exception ex) {
-                    Console.WriteLine(ex.Message);
+                    //Console.WriteLine(ex.Message);
+                    StaticConnections.Logger.Error(ex);
                 }
 
-                Thread.Sleep(1000);
-                Console.WriteLine("End");
+                Thread.Sleep(_lastRead.Millisecond + TimeSpan.FromMinutes(_updateDeltaMinutes).Milliseconds - DateTime.UtcNow.Millisecond);
+                //Console.WriteLine("End");
             }
         }
     }

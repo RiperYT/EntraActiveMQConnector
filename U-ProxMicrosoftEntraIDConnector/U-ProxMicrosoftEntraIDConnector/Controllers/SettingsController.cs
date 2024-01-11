@@ -27,11 +27,17 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
             try
             {
                 if (!secureToken.Equals(StaticConnections.SecureToken))
+                {
+                    StaticConnections.Logger.Warn("EntraId set controller, secure token is not correct");
                     throw new Exception("Not correct secure token");
+                }
+
+                StaticConnections.Logger.Info("EntraId set controller");
                 return _entraService.Connect(tenantId, clientId);
             }
             catch (Exception ex)
             {
+                StaticConnections.Logger.Error(ex);
                 return ex.Message;
             }
         }
@@ -42,12 +48,17 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
             try
             {
                 if (!secureToken.Equals(StaticConnections.SecureToken))
+                {
+                    StaticConnections.Logger.Warn("EntraId confirm controller, secure token is not correct");
                     throw new Exception("Not correct secure token");
+                }
 
+                StaticConnections.Logger.Info("EntraId confirm controller");
                 return await _entraService.ConfirmConnection() ? "Confirmed" : "Not confirmed, try new connection";
             }
             catch (Exception ex)
             {
+                StaticConnections.Logger.Error(ex);
                 return ex.Message;
             }
         }
@@ -57,8 +68,13 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
         {
             try
             {
+                StaticConnections.Logger.Info("ActiveMQ connnect controller");
                 if (!secureToken.Equals(StaticConnections.SecureToken))
+                {
+                    StaticConnections.Logger.Warn("ActiveMQ controller, secure token is not correct");
                     throw new Exception("Not correct secure token");
+                }
+
                 if (!await _brockerService.Connect(domen, port, username, password))
                     throw new Exception("Cannot connect");
                 //Thread.Sleep(5000);
@@ -80,6 +96,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
             }
             catch (Exception ex)
             {
+                StaticConnections.Logger.Error(ex);
                 var settings = _settingsRepository.Get();
                 if (settings != null)
                     await _brockerService.Connect(settings.DomenBrocker, settings.PortBroker, settings.UsernameBroker, settings.PasswordBroker);

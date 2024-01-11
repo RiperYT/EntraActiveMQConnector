@@ -86,7 +86,8 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{ex.Message}");
+                //Console.WriteLine($"{ex.Message}");
+                StaticConnections.Logger.Error(ex);
                 return false;
             }
         }
@@ -200,7 +201,8 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                //Console.WriteLine(ex.Message);
+                StaticConnections.Logger.Error(ex);
                 return "Not connected ERROR";
             }
         }
@@ -231,7 +233,8 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                //Console.WriteLine(ex.Message);
+                StaticConnections.Logger.Error(ex);
                 return "";
             }
         }
