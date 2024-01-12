@@ -16,6 +16,9 @@ StaticConnections.Logger = logger;
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+    var key = builder.Configuration.GetValue<string>("SecureToken");
+    if (key != null)
+        StaticConnections.SecureToken = key;
 
     builder.Logging.ClearProviders();
     builder.Host.UseNLog();

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
 namespace U_ProxMicrosoftEntraIDConnector.Data.Entities
 {
@@ -26,6 +27,17 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Entities
 
         [Column("last_get")]
         public DateTime LastGet { get; set; }
+
+
+        [Column("tenatId")]
+        public string TenatId { get; set; }
+
+        [Column("clientId")]
+        public string ClientId { get; set; }
+
+        [Column("client_secret")]
+        public string ClientSecret { get; set; }
+
         //[Key]
         //[Column("tenantId_Entra")]
         //public string TenatIdEntra { get; set; }
@@ -34,7 +46,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Entities
         //public string ClientIdEntra { get; set; }
 
 
-        public SettingEntity(string domenBrocker, string portBroker, string usernameBroker, string passwordBroker, string queueName,  DateTime lastUpdate, DateTime lastGet)
+        public SettingEntity(string domenBrocker, string portBroker, string usernameBroker, string passwordBroker, string queueName,  DateTime lastUpdate, DateTime lastGet, string tenatId, string clientId, string clientSecret)
         {
             DomenBrocker = domenBrocker;
             PortBroker = portBroker;
@@ -43,6 +55,10 @@ namespace U_ProxMicrosoftEntraIDConnector.Data.Entities
             QueueName = queueName;
             LastUpdate = lastUpdate;
             LastGet = lastGet;
+
+            TenatId = tenatId;
+            ClientId = clientId;
+            ClientSecret = clientSecret;
 
             //TenatIdEntra = tenatIdEntra;
             //ClientIdEntra = clientIdEntra;

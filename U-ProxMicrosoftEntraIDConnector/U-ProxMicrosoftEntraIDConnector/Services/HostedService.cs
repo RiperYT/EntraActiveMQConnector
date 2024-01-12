@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.FileSystemGlobbing;
-using Microsoft.Graph.Models;
+﻿using Microsoft.IdentityModel.Tokens;
 using System.Text.Json;
 using U_ProxMicrosoftEntraIDConnector.Common;
 using U_ProxMicrosoftEntraIDConnector.Data;
@@ -35,7 +34,10 @@ namespace U_ProxMicrosoftEntraIDConnector.Services
                 var settings = _settingsRepository.Get();
                 if (settings != null)
                 {
-                    _brockerService.Connect(settings.DomenBrocker, settings.PortBroker, settings.UsernameBroker, settings.PasswordBroker);
+                    if (!settings.DomenBrocker.IsNullOrEmpty())
+                        _brockerService.Connect(settings.DomenBrocker, settings.PortBroker, settings.UsernameBroker, settings.PasswordBroker);
+                    if (!settings.TenatId.IsNullOrEmpty())
+                        _entraService.Connect(settings.TenatId, settings.ClientId, settings.ClientSecret);
                 }
             }
             catch (Exception ex) {

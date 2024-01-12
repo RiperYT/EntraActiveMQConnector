@@ -6,13 +6,10 @@ namespace U_ProxMicrosoftEntraIDConnector.Services.Abstractions
 {
     public interface IEntraService
     {
-        public string Connect(string tenantId, string clientId);
+        public Task<bool> Connect(string tenantId, string clientId, string clientSecret);
 
         public Task<bool> CheckConnection();
-        public Task<bool> ConfirmConnection();
 
         public Task<List<UserEntity>> GetAllUsers();
-
-        public Task<List<UserEntity>> GetDeltaUsers(DateTime filterDate);
     }
 }

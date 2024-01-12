@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Graph.Models;
+using Microsoft.IdentityModel.Tokens;
 using System.Text.Json;
 using U_ProxMicrosoftEntraIDConnector.Common;
 using U_ProxMicrosoftEntraIDConnector.Data.Abstractions;
@@ -22,7 +24,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
         }
 
         [HttpGet("setEntraId")]
-        public async Task<string> SetEntraId(string secureToken, string tenantId, string clientId)
+        public async Task<string> SetEntraId(string secureToken, string tenantId, string clientId, string clientSecret)
         {
             try
             {
@@ -33,32 +35,33 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
                 }
 
                 StaticConnections.Logger.Info("EntraId set controller");
-                return _entraService.Connect(tenantId, clientId);
-            }
-            catch (Exception ex)
-            {
-                StaticConnections.Logger.Error(ex);
-                return ex.Message;
-            }
-        }
-
-        [HttpGet("confirmEntraId")]
-        public async Task<string> ConfirmEntraId(string secureToken)
-        {
-            try
-            {
-                if (!secureToken.Equals(StaticConnections.SecureToken))
+                var success = await _entraService.Connect(tenantId, clientId, clientSecret);
+                if (success)
                 {
-                    StaticConnections.Logger.Warn("EntraId confirm controller, secure token is not correct");
-                    throw new Exception("Not correct secure token");
+                    var settings = _settingsRepository.Get();
+                    if (settings == null)
+                    {
+                        settings = new SettingEntity("", "", "", "", "", DateTime.MinValue, DateTime.MinValue, "", "", "");
+                    }
+                    else
+                    {
+                        settings.TenatId = tenantId;
+                        settings.ClientId = clientId;
+                        settings.ClientSecret = clientSecret;
+                    }
+                    _settingsRepository.Add(settings);
+                    return "Connected";
                 }
-
-                StaticConnections.Logger.Info("EntraId confirm controller");
-                return await _entraService.ConfirmConnection() ? "Confirmed" : "Not confirmed, try new connection";
+                else
+                    return "Not connected";
             }
             catch (Exception ex)
             {
                 StaticConnections.Logger.Error(ex);
+                var settings = _settingsRepository.Get();
+                if (settings != null)
+                    if (!settings.TenatId.IsNullOrEmpty())
+                        await _entraService.Connect(settings.TenatId, settings.ClientId, settings.ClientSecret);
                 return ex.Message;
             }
         }
@@ -81,7 +84,7 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
                 var settings = _settingsRepository.Get();
                 if (settings == null)
                 {
-                    settings = new SettingEntity(domen, port, username, password, queueName, DateTime.MinValue, DateTime.MinValue);
+                    settings = new SettingEntity(domen, port, username, password, queueName, DateTime.MinValue, DateTime.MinValue, "", "", "");
                 }
                 else
                 {
@@ -99,7 +102,8 @@ namespace U_ProxMicrosoftEntraIDConnector.Controllers
                 StaticConnections.Logger.Error(ex);
                 var settings = _settingsRepository.Get();
                 if (settings != null)
-                    await _brockerService.Connect(settings.DomenBrocker, settings.PortBroker, settings.UsernameBroker, settings.PasswordBroker);
+                    if (!settings.DomenBrocker.IsNullOrEmpty())
+                        await _brockerService.Connect(settings.DomenBrocker, settings.PortBroker, settings.UsernameBroker, settings.PasswordBroker);
                 return ex.Message;
             }
         }
